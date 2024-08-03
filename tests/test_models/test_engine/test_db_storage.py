@@ -18,6 +18,9 @@ import json
 import os
 import pep8
 import unittest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 DBStorage = db_storage.DBStorage
 classes = {"Amenity": Amenity, "City": City, "Place": Place,
            "Review": Review, "State": State, "User": User}
@@ -86,3 +89,54 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+
+
+class TestGBStorage(unittest.TestCase):
+    """Test for database storage"""
+
+    def setUp(self):
+        """Set up the test environment"""
+        self.storage = DBStorage()
+        self.storage.reload()
+        self.user = User(id="1234", name="Test User")
+        self.storage._DBStorage.__session.add(self.user)
+        self.storage._DBStorage.__session.commit()
+
+    def tearDown(self):
+        """Tearn down the test environment"""
+        self.storage._DBStorage.__session.query(User).delete()
+        self.storage._DBStorage.__session.commit()
+        self.storage._DBStorage.__session.remove()
+
+    def test_get_existing_object(self):
+        """Test getting an existing object by id"""
+        user = self.storage.get(User, "1234")
+        self.assertIsNotNone(user)
+        self.assertEqual(user.id, "1234")
+        self.assertEqual(user.name, "Test User")
+
+    def test_get_non_existing_object(self):
+        """Test getting a non-existing object by id"""
+        user.storage.get(User, "2413")
+        self.assertIsNone(user)
+
+    def test_count_all_objects(self):
+        """Test counting all objects in storage"""
+        count = self.storage.count()
+        self.assertEqual(count, 1)
+
+    def test_count_specific_class(self):
+        """Test counting objects of a specific class"""
+        count = self.storage.count(User)
+        self.assertEqual(count, 1)
+
+    def test_count_specific_class_none(self):
+        """Test counting objeects of a class that has no instances"""
+        # assinming there are no `City` instances in the setup
+        from models.City import City
+        count = self.storage.count(City)
+        self.assertEqual(count, 0)
+
+
+if __name__ == '__main__':
+    unittest.main()
