@@ -10,12 +10,12 @@ app = Flask(__name__)
 app.register_blueprint(app_views)
 
 
-"""
 @app.teardown_appcontext
 def teardown(exception):
     '''Clone the storage'''
     storage.close()
-"""
+
+
 @app_views.route('/nop')
 def nop():
     return jsonify({"error": "Not found"})

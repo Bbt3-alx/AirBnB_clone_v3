@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+"""Amenities"""
+
+from models import storage
+
+def get_count():
+    """count"""
+    nb = storage.count()
+    print(nb)
+
+
+if __name__ == "__main__":
+    main()
