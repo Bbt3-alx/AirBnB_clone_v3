@@ -43,7 +43,7 @@ class HBNBCommand(cmd.Cmd):
                 value = kvp[1]
                 if value[0] == value[-1] == '"':
                     value = shlex.split(value)[0].replace('_', ' ')
-                else Exception:
+                else:
                     try:
                         value = int(value)
                     except Exception:

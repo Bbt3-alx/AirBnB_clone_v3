@@ -91,7 +91,7 @@ class TestFileStorage(unittest.TestCase):
         """Test that save properly saves objects to file.json"""
 
 
-class TestGBStorage(unittest.TestCase):
+class TestDBStorage(unittest.TestCase):
     """Test for database storage"""
 
     def setUp(self):
