@@ -71,7 +71,7 @@ test_db_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
-class TestFileStorage(unittest.TestCase):
+class TestDBStorage(unittest.TestCase):
     """Test the FileStorage class"""
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
@@ -81,62 +81,82 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
         """Test that all returns all rows when no class is passed"""
+        state_data = {"Name": "Mali"}
+        new_state = State(**state_data)
+        models.storage.new(new_stage)
+        models.storage.save()
+
+        session = models.storage._DBStorage__session
+        all_objects = session.query(State).all()
+
+        self.assertTrue(len(all_objects) > 0)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_new(self):
         """test that new adds an object to the database"""
+        state_data = {"Name": "Guinne"}
+        new_state = State(**state_data)
+
+        models.storage.new(new_state)
+
+        session = models.storage._DBStorage__session
+
+        retrieved_state = session.query(State).filter_by(id=new_state).first()
+
+        self.assertEqual(retrieved_state.id, new_state.id)
+        self.assertEqual(retrieved_state.name, new_state.name)
+        self.assertIsNone(retrieved_state)
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+        state_data = {"Name": "Niger"}
+        new_state = State(**state_data)
 
+        models.storage.new(new_state)
 
-class TestDBStorage(unittest.TestCase):
-    """Test for database storage"""
+        models.storage.save()
 
-    def setUp(self):
-        """Set up the test environment"""
-        self.storage = DBStorage()
-        self.storage.reload()
-        self.user = User(id="1234", name="Test User")
-        self.storage._DBStorage.__session.add(self.user)
-        self.storage._DBStorage.__session.commit()
+        session = models.storage._DBStorage__session
 
-    def tearDown(self):
-        """Tearn down the test environment"""
-        self.storage._DBStorage.__session.query(User).delete()
-        self.storage._DBStorage.__session.commit()
-        self.storage._DBStorage.__session.remove()
+        retrieved_state = session.query(State).filter_by(id=new_state).first()
 
-    def test_get_existing_object(self):
-        """Test getting an existing object by id"""
-        user = self.storage.get(User, "1234")
-        self.assertIsNotNone(user)
-        self.assertEqual(user.id, "1234")
-        self.assertEqual(user.name, "Test User")
+        self.assertEqual(retrieved_state.id, new_state.id)
+        self.assertEqual(retrieved_state.name, new_state.name)
+        self.assertIsNone(retrieved_state)
 
-    def test_get_non_existing_object(self):
-        """Test getting a non-existing object by id"""
-        user.storage.get(User, "2413")
-        self.assertIsNone(user)
+    def test_get(self):
+        """Test get methode"""
+        storage = models.storage
 
-    def test_count_all_objects(self):
-        """Test counting all objects in storage"""
-        count = self.storage.count()
-        self.assertEqual(count, 1)
+        storage.reload()
 
-    def test_count_specific_class(self):
-        """Test counting objects of a specific class"""
-        count = self.storage.count(User)
-        self.assertEqual(count, 1)
+        state_data = {"Name": "Bamako"}
 
-    def test_count_specific_class_none(self):
-        """Test counting objeects of a class that has no instances"""
-        # assinming there are no `City` instances in the setup
-        from models.City import City
-        count = self.storage.count(City)
-        self.assertEqual(count, 0)
+        state_instance = State(**state_data)
+        storage.new(state_instance)
+        storage.save()
 
+        retrieved_sate = storage.get(State, state_instance.id)
+        self.assertEqual(state_instance, retrieved_state)
+        fake_state_id = storage.get(State, 'fake_id')
+        self.assertEqual(fake_state_id, None)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_count(self):
+        """Test count method"""
+        storage = models.storage
+        storage.reload()
+        state_data = {"Name": "Bobo"}
+        state_instance = State(**state_data)
+        storage.new(state_instance)
+
+        city_data = {"Nane": "Bamako", "state_id": state_instance.iid}
+        city_instance = City(**city_data)
+        storage.new(city_instance)
+        storage.save()
+
+        state_occurence = storage.count(State)
+        self.assertEqual(state_occurence, len(storage.all(State)))
+
+        all_occurence = storage.count()
+        self.assertEqual(state_occurence, len(storage.all()))

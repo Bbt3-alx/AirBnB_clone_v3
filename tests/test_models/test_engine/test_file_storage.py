@@ -18,6 +18,8 @@ import json
 import os
 import pep8
 import unittest
+
+
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
@@ -70,18 +72,6 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-    def setUp(self):
-        """Set up the test environment"""
-        self.storage = FileStorage()
-        self.base_model = BaseModel()
-        self.user = User()
-        self.base_model.save()
-        self.user.save()
-
-    def tearDown(self):
-        """TEar down test environment"""
-        self.storage.__objects.clear()
-
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
@@ -127,25 +117,37 @@ class TestFileStorage(unittest.TestCase):
         self.assertEqual(json.loads(string), json.loads(js))
 
     def test_get(self):
-        """Test the get method"""
-        obj = storage.get(BaseModel, self.base_model.id)
-        self.assertEqual(obj, self.base_model)
-        obj = storage.get(User, self.user.id)
-        self.assertEqual(obj, self.user)
-        obj = storage.get(User, "non_existent_id")
-        self.assertIsNone(obj)
+        """Test get methode"""
+        storage = FileStorage()
+
+        storage.reload()
+
+        state_data = {"Name": "Bamako"}
+
+        state_instance = State(**state_data)
+        storage.new(state_instance)
+        storage.save()
+
+        retrieved_state = storage.get(State, state_instance.id)
+        self.assertEqual(state_instance, retrieved_state)
+        fake_state_id = storage.get(State, 'fake_id')
+        self.assertEqual(fake_state_id, None)
 
     def test_count(self):
-        """Test the count method"""
-        count = self.storage.count()
-        self.assertEqual(count, 2)
-        count = self.storage.count(BaseModel)
-        self.assertEqual(count, 1)
-        count = self.storage.count(User)
-        self.assertEqual(count, 1)
-        count = self.storage.count(Place)
-        self.assertEqual(count, 0)
+        """Test count method"""
+        storage = FileStorage()
+        storage.reload()
+        state_data = {"Name": "Bobo"}
+        state_instance = State(**state_data)
+        storage.new(state_instance)
 
+        city_data = {"Nane": "Bamako", "state_id": state_instance.id}
+        city_instance = City(**city_data)
+        storage.new(city_instance)
+        storage.save()
 
-if __name__ == "__main__":
-    unitest.main()
+        state_occurence = storage.count(State)
+        self.assertEqual(state_occurence, len(storage.all(State)))
+
+        all_occurence = storage.count()
+        self.assertEqual(all_occurence, len(storage.all()))
