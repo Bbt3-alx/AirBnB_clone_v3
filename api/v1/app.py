@@ -2,7 +2,7 @@
 """Start the api"""
 
 from os import getenv
-from flask import Flask
+from flask import Flask, jsonify
 from models import storage
 from api.v1.views import app_views
 
@@ -17,11 +17,10 @@ def teardown(exception):
     storage.close()
 
 
-@app.route('/nop')
-def nop():
-    return jsonify({
-        "error": "Not found"
-        })
+@app.errorhandler(404)
+def not_found(error):
+    """Handler for 404 errors that returns a json response"""
+    return jsonify({"error": "Not found"}), 404
 
 
 if __name__ == "__main__":
