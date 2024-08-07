@@ -16,7 +16,7 @@ def status():
 @app_views.route('/api/v1/stats')
 def get_stats():
     """Number of object"""
-    stata = {
+    stats = {
            "Amenity": storage.count("Amenity"),
            "City": storage.count("City"),
            "Place": storage.count("Place"),
